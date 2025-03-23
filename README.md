@@ -1,70 +1,149 @@
-# Getting Started with Create React App
+# Sanepid App
 
-This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+A web application for managing health and safety controls, documentation, and compliance reports for food service establishments.
 
-## Available Scripts
+## Features
 
-In the project directory, you can run:
+- Controls management with status tracking
+- Documentation repository with HACCP analysis
+- Monthly reports with compliance tracking
+- User management with different roles
+- Responsive design for desktop and mobile devices
 
-### `npm start`
+## Technology Stack
 
-Runs the app in the development mode.\
-Open [http://localhost:3000](http://localhost:3000) to view it in your browser.
+- **Frontend**: React, Tailwind CSS
+- **State Management**: React Context API
+- **Routing**: React Router
+- **API Communication**: Axios
+- **Form Handling**: Formik with Yup validation
+- **UI Components**: Custom components and React Tabs
+- **Notifications**: React Toastify
 
-The page will reload when you make changes.\
-You may also see any lint errors in the console.
+## Getting Started
 
-### `npm test`
+### Prerequisites
 
-Launches the test runner in the interactive watch mode.\
-See the section about [running tests](https://facebook.github.io/create-react-app/docs/running-tests) for more information.
+- Node.js (v14 or later)
+- npm or yarn
+- IntelliJ IDEA or WebStorm (for development in the IntelliJ environment)
 
-### `npm run build`
+### Installation
 
-Builds the app for production to the `build` folder.\
-It correctly bundles React in production mode and optimizes the build for the best performance.
+1. Clone the repository:
 
-The build is minified and the filenames include the hashes.\
-Your app is ready to be deployed!
+```bash
+git clone https://github.com/your-username/sanepid-app.git
+cd sanepid-app
+```
 
-See the section about [deployment](https://facebook.github.io/create-react-app/docs/deployment) for more information.
+2. Install dependencies:
 
-### `npm run eject`
+```bash
+npm install
+# or
+yarn install
+```
 
-**Note: this is a one-way operation. Once you `eject`, you can't go back!**
+3. Start the development server:
 
-If you aren't satisfied with the build tool and configuration choices, you can `eject` at any time. This command will remove the single build dependency from your project.
+```bash
+npm start
+# or
+yarn start
+```
 
-Instead, it will copy all the configuration files and the transitive dependencies (webpack, Babel, ESLint, etc) right into your project so you have full control over them. All of the commands except `eject` will still work, but they will point to the copied scripts so you can tweak them. At this point you're on your own.
+The application will be available at `http://localhost:3000`.
 
-You don't have to ever use `eject`. The curated feature set is suitable for small and middle deployments, and you shouldn't feel obligated to use this feature. However we understand that this tool wouldn't be useful if you couldn't customize it when you are ready for it.
+### Using IntelliJ IDEA
 
-## Learn More
+To run the project in IntelliJ IDEA:
 
-You can learn more in the [Create React App documentation](https://facebook.github.io/create-react-app/docs/getting-started).
+1. Open IntelliJ IDEA
+2. Select "Open" and navigate to the project folder
+3. Wait for the IDE to index the files and recognize the project structure
+4. Open the terminal in IntelliJ (View → Tool Windows → Terminal)
+5. Run `npm install` to install dependencies
+6. Create a Run Configuration:
+    - Go to Run → Edit Configurations
+    - Click the "+" button and select "npm"
+    - Name it "Start Sanepid App"
+    - Set "Command" to "start"
+    - Click "Apply" and "OK"
+7. Run the application using the green "Run" button or Run → Run 'Start Sanepid App'
 
-To learn React, check out the [React documentation](https://reactjs.org/).
+## Mock Data Mode
 
-### Code Splitting
+The applicationng with mock data, which is useful for development and testing without a backend API:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/code-splitting](https://facebook.github.io/create-react-app/docs/code-splitting)
+### Mock Data Configuration
 
-### Analyzing the Bundle Size
+- Mock data mode is enabled by default (see `.env` file)
+- You can toggle between mock data and real API in the configuration panel (gear icon at the bottom right)
+- When using mock data, you can use the following demo login credentials:
+    - Client User: john@example.com / password
+    - Client Admin: jane@example.com / password
+    - Sanepid User: robert@example.com / password
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size](https://facebook.github.io/create-react-app/docs/analyzing-the-bundle-size)
+### Environment Variables
 
-### Making a Progressive Web App
+The application uses environment variables for configuration:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app](https://facebook.github.io/create-react-app/docs/making-a-progressive-web-app)
+- `REACT_APP_API_URL`: The base URL for the backend API (default: http://localhost:8080/api)
+- `REACT_APP_USE_MOCK_DATA`: Whether to use mock data instead of making real API calls (default: true)
 
-### Advanced Configuration
+You can change these in the `.env` file or through the configuration panel.
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/advanced-configuration](https://facebook.github.io/create-react-app/docs/advanced-configuration)
+## Project Structure
 
-### Deployment
+```
+sanepid-app/
+├── public/
+│   └── index.html
+├── src/
+│   ├── components/
+│   │   ├── common/
+│   │   ├── controls/
+│   │   ├── documents/
+│   │   ├── layout/
+│   │   └── reports/
+│   ├── contexts/
+│   │   └── AuthContext.js
+│   ├── hooks/
+│   │   └── useAuth.js
+│   ├── pages/
+│   │   ├── ControlsPage/
+│   │   ├── ControlsPage.js
+│   │   ├── DocumentsPage.js
+│   │   ├── HomePage.js
+│   │   ├── LoginPage.js
+│   │   ├── OnboardingPage.js
+│   │   └── ReportsPage.js
+│   ├── services/
+│   │   ├── api.js
+│   │   ├── authService.js
+│   │   ├── controlsService.js
+│   │   ├── documentsService.js
+│   │   └── reportsService.js
+│   ├── styles/
+│   │   └── global.css
+│   ├── mockData.js
+│   ├── App.js
+│   └── index.js
+├── .env
+├── package.json
+├── README.md
+└── tailwind.config.js
+```
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/deployment](https://facebook.github.io/create-react-app/docs/deployment)
+## Backend API Integration
 
-### `npm run build` fails to minify
+When ready to connect to a real backend API:
 
-This section has moved here: [https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify](https://facebook.github.io/create-react-app/docs/troubleshooting#npm-run-build-fails-to-minify)
+1. Set `REACT_APP_USE_MOCK_DATA=false` in the `.env` file or through the configuration panel
+2. Set `REACT_APP_API_URL` to your API's base URL
+3. Ensure your backend API implements the required endpoints (see service files for expected endpoints)
+
+## License
+
+[MIT](LICENSE)
