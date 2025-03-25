@@ -1,5 +1,3 @@
-
-
 // src/App.js
 import React, { useEffect } from 'react';
 import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
@@ -16,6 +14,8 @@ import DocumentsPage from './pages/DocumentsPage';
 import ReportsPage from './pages/ReportsPage';
 import LoginPage from './pages/LoginPage';
 import OnboardingPage from './pages/OnboardingPage';
+import ManageLocationsPage from './pages/ManageLocationsPage';
+import LocationControlsPage from './pages/LocationControlsPage'; // Add this import
 
 // Contexts
 import { AuthProvider } from './contexts/AuthContext';
@@ -25,17 +25,6 @@ import ConfigPanel from './components/common/ConfigPanel';
 
 // Styles
 import './styles/global.css';
-
-
-// Add these diagnostics at the top of App.js
-console.log('Layout:', Layout);
-console.log('HomePage:', HomePage);
-console.log('ControlsPage:', ControlsPage);
-console.log('DocumentsPage:', DocumentsPage);
-console.log('ReportsPage:', ReportsPage);
-console.log('LoginPage:', LoginPage);
-console.log('OnboardingPage:', OnboardingPage);
-
 
 // Initialize global app configuration
 if (!window.appConfig) {
@@ -62,6 +51,8 @@ function App() {
               <Route path="controls/*" element={<ControlsPage />} />
               <Route path="documents" element={<DocumentsPage />} />
               <Route path="reports" element={<ReportsPage />} />
+              <Route path="manage-locations" element={<ManageLocationsPage />} />
+              <Route path="manage-locations/:locationId/controls" element={<LocationControlsPage />} />
             </Route>
           </Routes>
           <ConfigPanel />

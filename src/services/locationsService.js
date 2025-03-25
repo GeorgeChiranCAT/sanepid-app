@@ -53,6 +53,29 @@ const locationsService = {
             console.error('Failed to fetch locations:', error);
             throw error.response?.data?.message || 'Failed to fetch locations';
         }
+    },
+
+    // Get location by id
+    getLocationById: async (id) => {
+        if (isMockDataEnabled()) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    const location = locations.find(loc => loc.id === id);
+                    if (location) {
+                        resolve(location);
+                    } else {
+                        reject('Location not found');
+                    }
+                }, 500);
+            });
+        }
+
+        try {
+            const response = await api.get(`/locations/${id}`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to fetch location';
+        }
     }
 };
 

@@ -1,8 +1,8 @@
 // src/services/controlsService.js
 import api from './api';
-import { controls, expiredControls } from '../mockData';
+import { controls, expiredControls, locations } from '../mockData';
 
-// Renamed to avoid React Hook rules
+// Helper function to check if mock data is enabled
 const isMockDataEnabled = () => {
     return localStorage.getItem('useMockData') === 'true' ||
         process.env.REACT_APP_USE_MOCK_DATA === 'true' ||
@@ -10,7 +10,7 @@ const isMockDataEnabled = () => {
 };
 
 const controlsService = {
-    // Get all controls
+    // Get all controls with optional filters
     getControls: async (filters = {}) => {
         if (isMockDataEnabled()) {
             return new Promise((resolve) => {
@@ -116,7 +116,7 @@ const controlsService = {
         }
     },
 
-    // Add a reason for missed control
+    // Add a reason for missed control(s)
     addMissedControlReason: async (id, data) => {
         if (isMockDataEnabled()) {
             return new Promise((resolve) => {
@@ -187,6 +187,126 @@ const controlsService = {
             return response.data;
         } catch (error) {
             throw error.response?.data?.message || 'Failed to add control';
+        }
+    },
+
+    // NEW METHODS FOR LOCATION CONTROLS MANAGEMENT
+
+    // Get all controls for a specific location
+    getLocationControls: async (locationId) => {
+        if (isMockDataEnabled()) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Find the location details
+                    const location = locations.find(loc => loc.id === locationId);
+                    if (!location) {
+                        resolve([]);
+                        return;
+                    }
+
+                    // Filter controls for the specific location
+                    const locationControls = controls.filter(control =>
+                        control.location === location.name
+                    );
+
+                    resolve(locationControls);
+                }, 500);
+            });
+        }
+
+        try {
+            const response = await api.get(`/locations/${locationId}/controls`);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to fetch location controls';
+        }
+    },
+
+    // Create a new control for a location
+    createLocationControl: async (locationId, controlData) => {
+        if (isMockDataEnabled()) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Find the location
+                    const location = locations.find(loc => loc.id === locationId);
+                    if (!location) {
+                        throw new Error('Location not found');
+                    }
+
+                    // Create new control with location info
+                    const newId = String(Math.max(...controls.map(c => parseInt(c.id) || 0), 0) + 1);
+                    const newControl = {
+                        id: newId,
+                        ...controlData,
+                        location: location.name,
+                        status: 'pending',
+                        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+                    };
+
+                    // Add to controls array
+                    controls.push(newControl);
+                    resolve(newControl);
+                }, 500);
+            });
+        }
+
+        try {
+            const response = await api.post(`/locations/${locationId}/controls`, controlData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to create location control';
+        }
+    },
+
+    // Update an existing control for a location
+    updateLocationControl: async (locationId, controlId, controlData) => {
+        if (isMockDataEnabled()) {
+            return new Promise((resolve, reject) => {
+                setTimeout(() => {
+                    // Find the control
+                    const controlIndex = controls.findIndex(c => c.id === controlId);
+                    if (controlIndex === -1) {
+                        reject('Control not found');
+                        return;
+                    }
+
+                    // Update the control
+                    const updatedControl = {
+                        ...controls[controlIndex],
+                        ...controlData
+                    };
+
+                    controls[controlIndex] = updatedControl;
+                    resolve(updatedControl);
+                }, 500);
+            });
+        }
+
+        try {
+            const response = await api.put(`/locations/${locationId}/controls/${controlId}`, controlData);
+            return response.data;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to update location control';
+        }
+    },
+
+    // Delete a control
+    deleteLocationControl: async (locationId, controlId) => {
+        if (isMockDataEnabled()) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Remove the control from the array (in a real app)
+                    // Here we just simulate success
+                    resolve(true);
+                }, 500);
+            });
+        }
+
+        try {
+            await api.delete(`/locations/${locationId}/controls/${controlId}`);
+            return true;
+        } catch (error) {
+            throw error.response?.data?.message || 'Failed to delete location control';
         }
     }
 };

@@ -8,6 +8,9 @@ const MainMenu = () => {
 
     if (!user) return null;
 
+    // Check if user is an admin
+    const isAdmin = user.role === 'client_admin' || user.role === 'sanepid_admin' || user.role === 'sanepid_user';
+
     return (
         <nav className="bg-gray-100 py-2 border-b">
             <div className="container mx-auto">
@@ -48,6 +51,20 @@ const MainMenu = () => {
                             Documents
                         </NavLink>
                     </li>
+                    {isAdmin && (
+                        <li>
+                            <NavLink
+                                to="/manage-locations"
+                                className={({ isActive }) =>
+                                    isActive
+                                        ? "font-medium text-blue-600 border-b-2 border-blue-600 pb-2"
+                                        : "text-gray-700 hover:text-blue-600"
+                                }
+                            >
+                                Manage Locations
+                            </NavLink>
+                        </li>
+                    )}
                 </ul>
             </div>
         </nav>

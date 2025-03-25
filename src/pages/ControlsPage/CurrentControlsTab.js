@@ -82,7 +82,9 @@ const CurrentControlsTab = ({ searchTerm = '' }) => {
         <div>
             <h2 className="text-xl font-semibold mb-4">Current Controls</h2>
 
-            {filteredControls.length === 0 ? (
+            {!Array.isArray(filteredControls) ? (
+                <div className="flex justify-center py-10">Loading controls...</div>
+            ) : filteredControls.length === 0 ? (
                 <p className="text-gray-500">
                     {searchTerm ? 'No controls found matching your search.' : 'No controls available.'}
                 </p>
