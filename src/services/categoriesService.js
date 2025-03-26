@@ -19,22 +19,34 @@ const mockCategories = [
 ];
 
 const categoriesService = {
-    // Get all categories
     getCategories: async () => {
-        if (isMockDataEnabled()) {
-            // Return mock data with renamed columns
-            return new Promise(resolve => {
-                setTimeout(() => {
-                    resolve(mockCategories);
-                }, 300);
-            });
-        }
-
         try {
             const response = await api.get('/categories');
             return response.data;
         } catch (error) {
             console.error('Failed to fetch categories:', error);
+            throw error;
+        }
+    },
+
+    // Get subcategories for a specific category
+    getSubcategories: async (category) => {
+        try {
+            const response = await api.get(`/categories/${encodeURIComponent(category)}/subcategories`);
+            return response.data;
+        } catch (error) {
+            console.error(`Failed to fetch subcategories for ${category}:`, error);
+            throw error;
+        }
+    },
+
+    // Get all categories with subcategories
+    getAllCategoriesWithSubcategories: async () => {
+        try {
+            const response = await api.get('/categories/all');
+            return response.data;
+        } catch (error) {
+            console.error('Failed to fetch all categories with subcategories:', error);
             throw error;
         }
     },
