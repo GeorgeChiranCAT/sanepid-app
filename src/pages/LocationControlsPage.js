@@ -90,14 +90,26 @@ const LocationControlsPage = () => {
 
     const handleSaveControl = async (controlData) => {
         try {
+            // Format the data correctly
+            const formattedData = {
+                name: controlData.name,
+                category_id: controlData.category_id,
+                frequency_type: controlData.frequency_type,
+                frequency_config: controlData.frequency_config,
+                start_date: controlData.start_date,
+                end_date: controlData.end_date || null,
+                is_active: controlData.is_active ?? true
+            };
+
             let result;
             if (editingControl) {
                 // Update existing control
                 result = await controlsService.updateLocationControl(
                     locationId,
                     editingControl.id,
-                    controlData
+                    formattedData
                 );
+
                 setControls(prevControls =>
                     prevControls.map(control =>
                         control.id === result.id ? result : control
@@ -108,7 +120,7 @@ const LocationControlsPage = () => {
                 // Create new control
                 result = await controlsService.createLocationControl(
                     locationId,
-                    controlData
+                    formattedData
                 );
                 setControls(prevControls => [...prevControls, result]);
                 toast.success('Control created successfully');
@@ -263,6 +275,16 @@ const LocationControlsPage = () => {
 // Control Form Modal Component
 const ControlFormModal = ({ control, onClose, onSave }) => {
     // State for categories and subcategories
+    const isFrequencyField = (fieldName) => {
+        return fieldName === 'frequency' ||
+            fieldName === 'frequency_type' ||
+            fieldName.startsWith('frequency_') ||
+            fieldName === 'dayOfWeek' ||
+            fieldName === 'dayOfMonth' ||
+            fieldName === 'month' ||
+            fieldName === 'daysOfWeek';
+    };
+    const today = new Date().toISOString().split('T')[0]; // Gets current date in YYYY-MM-DD format
     const [categories, setCategories] = useState([]);
     const [subcategories, setSubcategories] = useState([]);
     const [categoriesLoading, setCategoriesLoading] = useState(true);
@@ -271,6 +293,7 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
     const [categoryDetailsLoading, setCategoryDetailsLoading] = useState(false);
     const [frequencyOptions, setFrequencyOptions] = useState([]);
     const [frequencyDetailsSchema, setFrequencyDetailsSchema] = useState({});
+
 
     // Initial form data
     const [formData, setFormData] = useState({
@@ -336,6 +359,10 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
                 if (recordWithFrequency) {
                     setFrequencyOptions(recordWithFrequency.frequency_options || []);
                     setFrequencyDetailsSchema(recordWithFrequency.frequency_details_schema || {});
+                } else {
+                    // Clear frequency options if none are found for this category
+                    setFrequencyOptions([]);
+                    setFrequencyDetailsSchema({});
                 }
 
                 // Initialize form values
@@ -355,6 +382,9 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
             } catch (error) {
                 console.error('Error fetching category details:', error);
                 setCategoryDetails([]);
+                // Clear frequency options on error
+                setFrequencyOptions([]);
+                setFrequencyDetailsSchema({});
             } finally {
                 setCategoryDetailsLoading(false);
             }
@@ -398,11 +428,30 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
     const handleChange = (e) => {
         const { name, value, type, checked } = e.target;
 
+        // For start_date, ensure it's not before today
+        if (name === 'start_date' && value < today) {
+            toast.error('Start date cannot be in the past');
+            return; // Don't update the form with an invalid date
+        }
+
         if (name === 'selectedCategory') {
             setFormData(prev => ({
                 ...prev,
                 selectedCategory: value,
-                category_id: '' // Reset subcategory when category changes
+                category_id: '', // Reset subcategory when category changes
+                frequency_type: 'weekly', // Reset to default frequency type
+                frequency_config: {} // Reset frequency config when category changes
+            }));
+
+            // Clear frequency options when category changes
+            setFrequencyOptions([]);
+            setFrequencyDetailsSchema({});
+        } else if (name === 'category_id') {
+            // When subcategory changes, update the form data but keep frequency settings
+            // as they will be updated by the useEffect that fetches category details
+            setFormData(prev => ({
+                ...prev,
+                [name]: value
             }));
         } else if (name === 'frequency_type') {
             // Handle frequency type changes
@@ -473,13 +522,28 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
             return;
         }
 
+        // Check if start date is valid
+        if (formData.start_date < today) {
+            toast.error('Start date cannot be in the past');
+            return;
+        }
+
         setSubmitting(true);
 
         try {
             // Remove temporary fields before saving
             const apiData = {...formData};
             delete apiData.selectedCategory;
-            delete apiData.categoryValues;
+
+            // Handle category values, but ensure frequency values aren't duplicated
+            const categoryValues = {...formData.categoryValues};
+            Object.keys(categoryValues).forEach(key => {
+                if (isFrequencyField(key)) {
+                    delete categoryValues[key]; // Remove frequency fields from categoryValues
+                }
+            });
+
+            apiData.categoryValues = categoryValues;
 
             await onSave(apiData);
         } catch (error) {
@@ -574,8 +638,8 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
                         </div>
                     )}
 
-                    {/* Frequency selector - Add this after category selection */}
-                    {frequencyOptions && frequencyOptions.length > 0 && (
+                    {/* Frequency selector - Only show if we have frequency options for this category */}
+                    {formData.category_id && frequencyOptions && frequencyOptions.length > 0 && (
                         <div className="mb-4">
                             <label htmlFor="frequency_type" className="block text-sm font-medium mb-1">
                                 Frequency
@@ -598,8 +662,9 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
                         </div>
                     )}
 
-                    {/* Frequency-specific fields */}
-                    {formData.frequency_type &&
+                    {/* Frequency-specific fields - Only show if we have a valid frequency type and schema for this category */}
+                    {formData.category_id &&
+                        formData.frequency_type &&
                         frequencyDetailsSchema &&
                         frequencyDetailsSchema[formData.frequency_type] &&
                         frequencyDetailsSchema[formData.frequency_type].fields &&
@@ -695,6 +760,7 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
                             name="start_date"
                             value={formData.start_date}
                             onChange={handleChange}
+                            min={today} // This prevents selecting dates before today
                             className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-blue-500 focus:border-blue-500"
                             required
                         />
@@ -721,22 +787,23 @@ const ControlFormModal = ({ control, onClose, onSave }) => {
                     {/* INSERT DYNAMIC FORM FIELDS HERE */}
                     {categoryDetails.length > 0 && (
                         <div className="border-t pt-4 mt-4">
-                            <h3 className="text-lg font-medium mb-3">Category Configuration</h3>
-
                             {categoryDetailsLoading ? (
                                 <p>Loading configuration fields...</p>
                             ) : (
                                 <div className="space-y-4">
-                                    {categoryDetails.map(field => (
-                                        <div key={field.id} className="mb-3">
-                                            <label htmlFor={field.field_name} className="block text-sm font-medium mb-1">
-                                                {field.field_label}
-                                                {field.is_required && <span className="text-red-500 ml-1">*</span>}
-                                            </label>
+                                    {categoryDetails
+                                        // Filter out frequency-related fields to avoid duplication
+                                        .filter(field => !isFrequencyField(field.field_name))
+                                        .map(field => (
+                                            <div key={field.id} className="mb-3">
+                                                <label htmlFor={field.field_name} className="block text-sm font-medium mb-1">
+                                                    {field.field_label}
+                                                    {field.is_required && <span className="text-red-500 ml-1">*</span>}
+                                                </label>
 
-                                            {field.help_text && (
-                                                <p className="text-xs text-gray-500 mb-1">{field.help_text}</p>
-                                            )}
+                                                {field.help_text && (
+                                                    <p className="text-xs text-gray-500 mb-1">{field.help_text}</p>
+                                                )}
 
                                             {field.field_type === 'text' && (
                                                 <input

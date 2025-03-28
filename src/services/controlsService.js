@@ -190,8 +190,6 @@ const controlsService = {
         }
     },
 
-    // NEW METHODS FOR LOCATION CONTROLS MANAGEMENT
-
     // Get all controls for a specific location
     getLocationControls: async (locationId) => {
         if (isMockDataEnabled()) {
@@ -218,12 +216,21 @@ const controlsService = {
             const response = await api.get(`/locations/${locationId}/controls`);
             return response.data;
         } catch (error) {
+            console.error('Error fetching location controls:', error);
             throw error.response?.data?.message || 'Failed to fetch location controls';
         }
     },
 
     // Create a new control for a location
     createLocationControl: async (locationId, controlData) => {
+        // Ensure frequency_config is properly formatted as a JSON string for the API
+        const formattedData = {
+            ...controlData,
+            frequency_config: typeof controlData.frequency_config === 'object'
+                ? controlData.frequency_config
+                : {}
+        };
+
         if (isMockDataEnabled()) {
             return new Promise((resolve) => {
                 setTimeout(() => {
@@ -237,10 +244,12 @@ const controlsService = {
                     const newId = String(Math.max(...controls.map(c => parseInt(c.id) || 0), 0) + 1);
                     const newControl = {
                         id: newId,
-                        ...controlData,
+                        ...formattedData,
                         location: location.name,
                         status: 'pending',
-                        expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString() // 7 days from now
+                        is_active: formattedData.is_active !== undefined ? formattedData.is_active : true,
+                        created_at: new Date().toISOString(),
+                        updated_at: new Date().toISOString()
                     };
 
                     // Add to controls array
@@ -251,15 +260,24 @@ const controlsService = {
         }
 
         try {
-            const response = await api.post(`/locations/${locationId}/controls`, controlData);
+            const response = await api.post(`/locations/${locationId}/controls`, formattedData);
             return response.data;
         } catch (error) {
+            console.error('Error creating location control:', error);
             throw error.response?.data?.message || 'Failed to create location control';
         }
     },
 
     // Update an existing control for a location
     updateLocationControl: async (locationId, controlId, controlData) => {
+        // Ensure frequency_config is properly formatted as a JSON string for the API
+        const formattedData = {
+            ...controlData,
+            frequency_config: typeof controlData.frequency_config === 'object'
+                ? controlData.frequency_config
+                : {}
+        };
+
         if (isMockDataEnabled()) {
             return new Promise((resolve, reject) => {
                 setTimeout(() => {
@@ -273,7 +291,8 @@ const controlsService = {
                     // Update the control
                     const updatedControl = {
                         ...controls[controlIndex],
-                        ...controlData
+                        ...formattedData,
+                        updated_at: new Date().toISOString()
                     };
 
                     controls[controlIndex] = updatedControl;
@@ -283,9 +302,10 @@ const controlsService = {
         }
 
         try {
-            const response = await api.put(`/locations/${locationId}/controls/${controlId}`, controlData);
+            const response = await api.put(`/locations/${locationId}/controls/${controlId}`, formattedData);
             return response.data;
         } catch (error) {
+            console.error('Error updating location control:', error);
             throw error.response?.data?.message || 'Failed to update location control';
         }
     },
@@ -293,19 +313,26 @@ const controlsService = {
     // Delete a control
     deleteLocationControl: async (locationId, controlId) => {
         if (isMockDataEnabled()) {
-            return new Promise((resolve) => {
+            return new Promise((resolve, reject) => {
                 setTimeout(() => {
-                    // Remove the control from the array (in a real app)
-                    // Here we just simulate success
-                    resolve(true);
+                    const controlIndex = controls.findIndex(c => c.id === controlId);
+                    if (controlIndex === -1) {
+                        reject('Control not found');
+                        return;
+                    }
+
+                    // Remove the control from the array
+                    controls.splice(controlIndex, 1);
+                    resolve({ success: true });
                 }, 500);
             });
         }
 
         try {
             await api.delete(`/locations/${locationId}/controls/${controlId}`);
-            return true;
+            return { success: true };
         } catch (error) {
+            console.error('Error deleting location control:', error);
             throw error.response?.data?.message || 'Failed to delete location control';
         }
     }
