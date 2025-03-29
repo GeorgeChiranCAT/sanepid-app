@@ -127,14 +127,14 @@ const ReportsPage = () => {
     // Function to determine status color
     const getStatusColor = (status) => {
         switch (status) {
-            case 'done':
+            case 'completed':
                 return 'bg-green-500';
             case 'missed':
                 return 'bg-red-500';
-            case 'not-required':
-                return 'bg-transparent';
+            case 'pending':
+                return 'bg-yellow-500';
             default:
-                return 'bg-gray-400';
+                return 'bg-gray-300';
         }
     };
 
@@ -258,9 +258,22 @@ const ReportsPage = () => {
                                         {daysArray.map(day => {
                                             const date = new Date(selectedYear, selectedMonth, day);
                                             const controlDay = control.days?.find(d =>
-                                                new Date(d.date).toDateString() === date.toDateString()
+                                                new Date(d.date).getDate() === day
                                             );
                                             const status = controlDay?.status || 'not-required';
+
+                                            let tooltipContent = `Status: ${status}`;
+                                            if (status === 'completed' && controlDay?.measurements) {
+                                                tooltipContent += ` - Measurements: ${
+                                                    typeof controlDay.measurements === 'object'
+                                                        ? Object.entries(controlDay.measurements)
+                                                            .map(([key, value]) => `${key}: ${value}`)
+                                                            .join(', ')
+                                                        : controlDay.measurements
+                                                }`;
+                                            } else if (status === 'missed') {
+                                                tooltipContent += ` - Reason: ${controlDay.reason || 'Not specified'}`;
+                                            }
 
                                             return (
                                                 <td
@@ -269,7 +282,7 @@ const ReportsPage = () => {
                                                 >
                                                     <div
                                                         className={`w-4 h-4 mx-auto rounded-full ${getStatusColor(status)}`}
-                                                        title={`Status: ${status}`}
+                                                        title={tooltipContent}
                                                     ></div>
                                                 </td>
                                             );

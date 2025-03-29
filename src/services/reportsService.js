@@ -2,7 +2,7 @@
 import api from './api';
 import { generateReportsData, locations } from '../mockData';
 
-// Helper function to check if mock data should be used (renamed to avoid React Hook rules)
+// Helper function to check if mock data should be used
 const isMockDataEnabled = () => {
     return localStorage.getItem('useMockData') === 'true' ||
         process.env.REACT_APP_USE_MOCK_DATA === 'true' ||
@@ -21,15 +21,11 @@ const reportsService = {
         }
 
         try {
-            const params = { month, year };
-            if (locationId) {
-                params.locationId = locationId;
-            }
-
-            const response = await api.get('/reports', { params });
+            const response = await api.get(`/reports/${year}/${month}/location/${locationId}`);
             return response.data;
         } catch (error) {
-            throw error.response?.data?.message || 'Failed to fetch reports';
+            console.error('Error fetching reports:', error);
+            throw error;
         }
     },
 
