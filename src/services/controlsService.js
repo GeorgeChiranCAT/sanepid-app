@@ -10,6 +10,58 @@ const isMockDataEnabled = () => {
 };
 
 const controlsService = {
+
+   // bring all the controls instances for a location
+    // In your frontend service
+    getControlInstancesForMonth: async (locationId, year, month) => {
+        const startDate = `${year}-${String(month).padStart(2, '0')}-01`;
+        const lastDay = new Date(year, month, 0).getDate();
+        const endDate = `${year}-${String(month).padStart(2, '0')}-${String(lastDay).padStart(2, '0')}`;
+
+        if (isMockDataEnabled()) {
+            return new Promise((resolve) => {
+                setTimeout(() => {
+                    // Create mock data for control instances
+                    const mockInstances = [];
+                    // Use the existing controls array from your mock data
+                    controls.forEach(control => {
+                        // Generate a few instances for each control
+                        for (let day = 1; day <= Math.min(5, lastDay); day++) {
+                            // Only create instances for some days (randomized)
+                            if (Math.random() > 0.7) {
+                                const date = `${year}-${String(month).padStart(2, '0')}-${String(day).padStart(2, '0')}`;
+                                mockInstances.push({
+                                    id: `mock-${control.id}-${day}`,
+                                    location_control_id: control.id,
+                                    scheduled_date: date,
+                                    status: ['pending', 'completed', 'missed'][Math.floor(Math.random() * 3)],
+                                    category: control.category,
+                                    subcategory: control.subcategory || '',
+                                    completed_at: Math.random() > 0.5 ? new Date().toISOString() : null,
+                                    measurements: Math.random() > 0.7 ? { value: `${Math.floor(Math.random() * 100)}°C` } : null
+                                });
+                            }
+                        }
+                    });
+                    resolve(mockInstances);
+                }, 500);
+            });
+        }
+
+        try {
+            const response = await api.get(`/instances/location/${locationId}`, {
+                params: {
+                    startDate: startDate,
+                    endDate: endDate
+                }
+            });
+            return response.data;
+        } catch (error) {
+            console.error('Error fetching control instances:', error);
+            throw error;
+        }
+    },
+
     // Get all controls with optional filters
     getControls: async (filters = {}) => {
         if (isMockDataEnabled()) {

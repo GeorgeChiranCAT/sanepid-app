@@ -7,9 +7,13 @@ import LogBooksTab from './ControlsPage/LogBooksTab';
 import AllControlPointsTab from './ControlsPage/AllControlPointsTab';
 import ExpiredTab from './ControlsPage/ExpiredTab';
 
+
+
 const ControlsPage = () => {
     const [tabIndex, setTabIndex] = useState(0);
     const [searchTerm, setSearchTerm] = useState('');
+
+
 
     return (
         <div>
@@ -56,5 +60,7 @@ const ControlsPage = () => {
         </div>
     );
 };
+
+
 
 export default ControlsPage;
